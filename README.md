@@ -49,4 +49,3 @@ The tests cover sample extraction, upload deduplication, worker claims and recov
 - `app/worker.py`, `app/extraction.py`, and `app/storage.py` handle processing, parsing, and persistence.
 - `app/templates/` and `app/static/` contain the interface.
 - `samples/` and `tests/` contain the demo files and test suite.
-- `DESIGN.md` records the visual direction. [Anti-slop](https://github.com/miqdadbadjuber/anti-slop) 3.2.26 is installed under `.agents/skills/` for this project, with its license included alongside the skills.
