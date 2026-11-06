@@ -1,0 +1,20 @@
+{% macro status_label(status, statuses) -%}
+<span class="status status-{{ status }}">{{ statuses.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro messages(error, notice) -%}
+{% if error %}
+  <p class="message message-error" role="alert">{{ error }}</p>
+{% endif %}
+{% if notice %}
+  <p class="message message-notice" role="status">{{ notice }}</p>
+{% endif %}
+{%- endmacro %}
+
+{% macro amount(total, currency) -%}
+{% if total is not none and total != '' %}
+  {% if currency %}<span class="currency">{{ currency }}</span> {% endif %}{{ total }}
+{% else %}
+  <span class="missing">Not extracted</span>
+{% endif %}
+{%- endmacro %}

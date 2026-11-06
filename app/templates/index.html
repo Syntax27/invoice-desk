@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "components.html" import amount, messages, status_label %}
+{% block content %}
+{% set pending_count = counts.get('queued', 0) + counts.get('processing', 0) %}
+{% set ready_count = counts.get('ready', 0) %}
+{% set total_count = pending_count + counts.get('needs_review', 0) + ready_count + counts.get('failed', 0) %}
+<div class="page-heading">
+  <div>
+    <h1>Invoice queue</h1>
+    <p>Review flagged invoices and export records that are ready.</p>
+    <a class="mobile-intake-link" href="#intake-heading">Add an invoice</a>
+  </div>
+  <div class="export-action">
+    {% if ready_count %}
+      <a class="button button-secondary" href="/export.csv">Export CSV</a>
+      <span>{{ ready_count }} ready to export</span>
+    {% else %}
+      <button class="button button-secondary" type="button" disabled>Export CSV</button>
+      <span>No invoices ready to export</span>
+    {% endif %}
+  </div>
+</div>
+
+{{ messages(error, notice) }}
+
+<div class="desk-layout">
+  <section class="queue" aria-labelledby="queue-heading">
+    <h2 class="sr-only" id="queue-heading">Invoice records</h2>
+    <nav class="filters" aria-label="Filter invoices by status">
+      <a href="/" {% if not selected_status %}aria-current="page"{% endif %}>
+        All <span class="filter-count">{{ total_count }}</span>
+      </a>
+      {% for status, label in statuses.items() %}
+        <a href="/?status={{ status }}" {% if selected_status == status %}aria-current="page"{% endif %}>
+          {{ label }} <span class="filter-count">{{ counts.get(status, 0) }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+    {% if pending_count %}
+      <div class="queue-progress">
+        <p>{{ pending_count }} {{ 'invoice' if pending_count == 1 else 'invoices' }} queued or processing</p>
+        <a href="/{% if selected_status %}?status={{ selected_status }}{% endif %}">Refresh queue</a>
+      </div>
+    {% endif %}
+
+    {% if jobs %}
+      <table class="records">
+        <caption class="sr-only">
+          {% if selected_status %}{{ statuses.get(selected_status) }} invoices{% else %}All invoices{% endif %}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Document</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="wide-field">Invoice date</th>
+            <th scope="col" class="wide-field total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <td class="document-cell">
+                <a class="file-link" href="/jobs/{{ job.id }}">{{ job.filename }}</a>
+                {% if job.invoice_number %}
+                  <span class="invoice-reference">{{ job.invoice_number }}</span>
+                {% endif %}
+                {% if job.invoice_date or (job.total is not none and job.total != '') %}
+                  <span class="mobile-record">
+                    {% if job.invoice_date %}<time datetime="{{ job.invoice_date }}">{{ job.invoice_date }}</time>{% endif %}
+                    {% if job.total is not none and job.total != '' %}
+                      <span>{{ amount(job.total, job.currency) }}</span>
+                    {% endif %}
+                  </span>
+                {% endif %}
+              </td>
+              <td>{{ status_label(job.status, statuses) }}</td>
+              <td class="wide-field">
+                {% if job.invoice_date %}
+                  <time datetime="{{ job.invoice_date }}">{{ job.invoice_date }}</time>
+                {% else %}
+                  <span class="missing">Not extracted</span>
+                {% endif %}
+              </td>
+              <td class="wide-field total-col">{{ amount(job.total, job.currency) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-queue">
+        {% if selected_status %}
+          <h3>No invoices with this status</h3>
+          <p>Choose another status or <a href="/">view all invoices</a>.</p>
+        {% else %}
+          <h3>No invoices yet</h3>
+          <p>Upload a PDF or load the sample invoices to try the review flow.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  <aside class="intake" aria-labelledby="intake-heading">
+    <h2 id="intake-heading" tabindex="-1">Add an invoice</h2>
+    <p>Choose a text-based invoice PDF to extract its number, date, total and currency.</p>
+    <form method="post" action="/jobs" enctype="multipart/form-data" class="upload-form">
+      <div class="file-field" data-file-drop>
+        <label for="invoice-file">Invoice PDF</label>
+        <input id="invoice-file" name="file" type="file" accept="application/pdf,.pdf"
+               aria-describedby="file-constraints" required>
+        <p class="field-hint" id="file-constraints">One PDF, up to {{ max_upload_mb }} MB.<span data-drop-hint hidden> You can also drop it here.</span></p>
+      </div>
+      <button class="button button-primary" type="submit">Upload PDF</button>
+    </form>
+
+    <div class="sample-intake">
+      <h3>Try a sample batch</h3>
+      <p>Load three synthetic invoices to try extraction and review.</p>
+      <form method="post" action="/samples">
+        <button class="button button-secondary" type="submit">Load sample invoices</button>
+      </form>
+    </div>
+  </aside>
+</div>
+{% endblock %}

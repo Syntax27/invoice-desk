@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Invoice desk{% endblock %}</title>
+  <link rel="stylesheet" href="/static/desk.css">
+  <script src="/static/desk.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="masthead">
+    <div class="frame masthead-inner">
+      <nav aria-label="Workspace">
+        <a class="wordmark" href="/">Invoice desk</a>
+      </nav>
+      <span class="masthead-label">PDF intake &amp; review</span>
+    </div>
+  </header>
+  <main class="frame page" id="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="frame workspace-footer">
+    <p>Local workspace</p>
+    <p>PDFs and invoice records are stored in SQLite.</p>
+  </footer>
+</body>
+</html>
